@@ -5,6 +5,7 @@ import java.util.UUID
 
 import io.funcqrs._
 import io.funcqrs.behavior._
+import io.funcqrs.interpreters.Identity
 
 import scala.util.Random
 
@@ -89,14 +90,12 @@ case class NonEmptyLottery(participants: List[String], id: LotteryId) extends Lo
   def removeParticipants =
     actions[Lottery]
       // removing participants (single or all) produce ParticipantRemoved events
-      .handleCommand {
-        cmd: RemoveParticipant => ParticipantRemoved(cmd.name, id)
-      }
-      .handleCommand {
-        // will produce a List[ParticipantRemoved]
-        cmd: RemoveAllParticipants.type =>
-          this.participants.map { name => ParticipantRemoved(name, id) }
-      }
+      .handleCommand {  case RemoveParticipant(name) => ParticipantRemoved(name, id) }
+//      .handleCommand {
+//        // will produce a List[ParticipantRemoved]
+//        cmd: RemoveAllParticipants.type =>
+//          this.participants.map { name => ParticipantRemoved(name, id) }
+//      }
       .handleEvent {
         evt: ParticipantRemoved =>
           val newParticipants = participants.filter(_ != evt.name)

@@ -16,6 +16,7 @@ import scala.util.Try
   * Functor that will be returned when handling the command. Fun.CQRS provides three CommandHandlerInvoker implementations:
   * IdCommandHandlerInvoker (returns the Identity Functor), TryCommandHandlerInvoker and FutureCommandHandlerInvoker.
   */
+//trait CommandHandlerInvoker[-C <: DomainCommand, E <: DomainEvent] {
 trait CommandHandlerInvoker[-C <: DomainCommand, E <: DomainEvent] {
 
   type F[_]

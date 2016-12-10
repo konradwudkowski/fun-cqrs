@@ -8,19 +8,19 @@ import scala.language.higherKinds
 import scala.util.Try
 
 trait InvokerDirective[-F[_]] {
-  def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: (C) => F[E]): CommandHandlerInvoker[C, E]
+  def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: PartialFunction[C,F[E]]): CommandHandlerInvoker[C, E]
 }
 
 object InvokerDirective {
 
   implicit val traversableDirective = new InvokerDirective[immutable.Seq] {
-    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: (C) => immutable.Seq[E]): CommandHandlerInvoker[C, E] = {
+    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: PartialFunction[C,immutable.Seq[E]]): CommandHandlerInvoker[C, E] = {
       IdCommandHandlerInvoker(cmdHandler)
     }
   }
 
   implicit val optionDirective = new InvokerDirective[Option] {
-    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: (C) => Option[E]): CommandHandlerInvoker[C, E] = {
+    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: PartialFunction[C, Option[E]]): CommandHandlerInvoker[C, E] = {
 
       val handlerWithSeq: (C) => immutable.Seq[E] =
         (cmd: C) => cmdHandler(cmd).map { immutable.Seq(_) }.getOrElse { immutable.Seq() }
@@ -30,14 +30,14 @@ object InvokerDirective {
   }
 
   implicit val tryDirective = new InvokerDirective[Try] {
-    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: (C) => Try[E]): CommandHandlerInvoker[C, E] = {
+    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: PartialFunction[C, Try[E]]): CommandHandlerInvoker[C, E] = {
       val handlerWithSeq: (C) => Try[immutable.Seq[E]] = (cmd: C) => cmdHandler(cmd).map(immutable.Seq(_))
       TryCommandHandlerInvoker(handlerWithSeq)
     }
   }
 
   implicit val asyncDirective = new InvokerDirective[Future] {
-    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: (C) => Future[E]): CommandHandlerInvoker[C, E] = {
+    def newInvoker[C <: DomainCommand, E <: DomainEvent](cmdHandler: PartialFunction[C, Future[E]]): CommandHandlerInvoker[C, E] = {
       import scala.concurrent.ExecutionContext.Implicits.global
       // wrap single event in immutable.Seq
       val handlerWithSeq: (C) => Future[immutable.Seq[E]] = (cmd: C) => cmdHandler(cmd).map(immutable.Seq(_))
